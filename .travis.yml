@@ -1,4 +1,13 @@
 language: go
 go:
  - "1.10"
-script: go test -v ./...
+script: make build
+deploy:
+  provider: releases
+  api_key:
+    secure: Kk3OXBNWB/67LWIdM61BdK0oRAOvUF/id4tZAjVuwUrl3+q132gm1d5h3pXljidXkjPwMtVhRmUeJmAA7TqfDvtzFf8s3bQx4SbNUpxh5SefdT+SKyFj4tYozDYXAyD1/VJNMIjjmllJLrOjyzV2Ywig2m+LQJFW1dSG6xUoRegKUzo6vZEkzeCRmMilkVlnRnQH9kkRbhdKX532/x2q7opgQ+4HGQFJDo054ofa4K1IBZ4vLd7way3HfzIPSqAGwMFNkFmiqYyx0rN2Nxk5Bz6v53rJAShad79bX65/PGST9FLweEyRMAjSafJSlkbQ8RDtt/hxfitWNJmE+8PbLj+uYLzmBF985RetUsw+NObowlnVq+QTFsNmgFmkHhJf3txkQOABLU6Yvgw4lHAsuG0KMI+jh9X/fIHRA8+8MQC78PasGkRrutRlfZ/bRkwmTUjTsg5K3NTasXTvNi0A3/XEtzqm+2rbBrZYSzsMB8QA7ROXcdY36FfidV71BVG77mBrQxpUVRrRjmQSgJfki701aqTMhcmctaq7AOzoLNmUSnZJBv7Q051rFZwHqDuU+vNp0LFbtq9/BJCEPYdd1TXNjjN3P0q9cvuspk25hgsUlAe61noyDONq1yLNi7K9d5frr6bnNPIrFZnWxKwyuBOsu9Zb77GejYDm1ZFXEoo=
+  file_glob: true
+  file: bens-*
+  on:
+    repo: highfidelity/bens
+    tags: true
