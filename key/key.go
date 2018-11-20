@@ -43,6 +43,14 @@ func decodePemFile(path string) (pem.Block, error) {
 	return *block, nil
 }
 
+func zero(data []byte) {
+	go func() {
+		for i := 0; i < len(data); i++ {
+			data[i] = 0
+		}
+	}()
+}
+
 func decryptPrivateKey(path string, pass []byte) (*rsa.PrivateKey, error) {
 	// Read the PEM Privdate Key
 	block, err := decodePemFile(path)
@@ -55,24 +63,37 @@ func decryptPrivateKey(path string, pass []byte) (*rsa.PrivateKey, error) {
 
 	// Decrypt the Private Key
 	if !x509.IsEncryptedPEMBlock(&block) {
+		zero(block.Bytes)
 		return nil, fmt.Errorf("unencrypted private key used!")
 	}
 	der, err := x509.DecryptPEMBlock(&block, pass)
 	if err != nil {
 		return nil, fmt.Errorf("decryption failed: %v", err)
 	}
+	if err = mlock(der); err != nil {
+		return nil, fmt.Errorf("couldn't lock key in memory: %v", err)
+	}
 	bytes := pem.EncodeToMemory(&pem.Block{Type: block.Type, Bytes: der})
 	if bytes == nil {
 		return nil, fmt.Errorf("couldn't encode decrypted block")
 	}
+	if err = mlock(bytes); err != nil {
+		return nil, fmt.Errorf("couldn't lock key in memory: %v", err)
+	}
+	zero(der)
 	p, rest := pem.Decode(bytes)
 	if p == nil || len(rest) > 0 {
 		return nil, fmt.Errorf("couldn't decode decrypted block")
 	}
+	if err = mlock(p.Bytes); err != nil {
+		return nil, fmt.Errorf("couldn't lock key in memory: %v", err)
+	}
+	zero(bytes)
 	pri, err := x509.ParsePKCS1PrivateKey(p.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't decode private key")
 	}
+	zero(p.Bytes)
 
 	return pri, nil
 }
@@ -83,10 +104,14 @@ type Key struct {
 }
 
 func NewWithPass(pass []byte, priKeyPath, pubKeyPath string) (Key, error) {
+	if err := mlock(pass); err != nil {
+		return Key{}, err
+	}
 	privateKey, err := decryptPrivateKey(priKeyPath, pass)
 	if err != nil {
 		return Key{}, err
 	}
+	zero(pass)
 
 	block, err := decodePemFile(pubKeyPath)
 	if err != nil {
