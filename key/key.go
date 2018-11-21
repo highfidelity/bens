@@ -82,11 +82,7 @@ type Key struct {
 	publicKey  *rsa.PublicKey
 }
 
-func New(passPath, priKeyPath, pubKeyPath string) (Key, error) {
-	pass, err := readPassFile(passPath)
-	if err != nil {
-		return Key{}, err
-	}
+func NewWithPass(pass []byte, priKeyPath, pubKeyPath string) (Key, error) {
 	privateKey, err := decryptPrivateKey(priKeyPath, pass)
 	if err != nil {
 		return Key{}, err
@@ -112,6 +108,14 @@ func New(passPath, priKeyPath, pubKeyPath string) (Key, error) {
 	}
 
 	return Key{privateKey: privateKey, publicKey: pub}, nil
+}
+
+func New(passPath, priKeyPath, pubKeyPath string) (Key, error) {
+	pass, err := readPassFile(passPath)
+	if err != nil {
+		return Key{}, err
+	}
+	return NewWithPass(pass, priKeyPath, pubKeyPath)
 }
 
 func (k Key) Encrypt(plainText string) (string, error) {
