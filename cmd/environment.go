@@ -8,21 +8,36 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/highfidelity/bens/cnf"
 	"github.com/highfidelity/bens/env"
 	"github.com/highfidelity/bens/key"
 )
 
+func readPassFromTerm() ([]byte, error) {
+	fmt.Printf("password: ")
+	pass, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("")
+	return pass, nil
+}
+
 var serializerType string
+var shouldAskPass bool
 
 func init() {
 	rootCmd.AddCommand(environmentCmd)
 	environmentCmd.PersistentFlags().StringVarP(
 		&serializerType,
 		"formatter", "", "shell", "choices are: shell, powershell and cmd")
+	environmentCmd.PersistentFlags().BoolVarP(
+		&shouldAskPass, "ask-pass", "", false, "ask for pass")
 }
 
 var environmentCmd = &cobra.Command{
@@ -34,7 +49,16 @@ var environmentCmd = &cobra.Command{
 			log.Fatalf("couldn't load serializer: %v", err)
 		}
 
-		cipher, err := key.New(passPath, priKeyPath, pubKeyPath)
+		var cipher key.Key
+		if shouldAskPass {
+			pass, err := readPassFromTerm()
+			if err != nil {
+				log.Fatalf("couldn't read pass from terminal: %v", err)
+			}
+			cipher, err = key.NewWithPass(pass, priKeyPath, pubKeyPath)
+		} else {
+			cipher, err = key.New(passPath, priKeyPath, pubKeyPath)
+		}
 		if err != nil {
 			log.Fatalf("couldn't key: %v", err)
 			return
