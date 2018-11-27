@@ -33,6 +33,10 @@ The other bens command `add` only requires the public key and yaml files. To add
 
 Now that you've added run `environment` against to verify it was added.
 
+Environment Variables
+---------------------
+* `BENS_PASS`: If set read the pass from this environmental variable, unless `--ask-pass` is specified on the command line. This environment variable isn't required, if it's unset the pass is read from the `pass.txt` file.
+
 Limitations
 -----------
 * Values for environmental variables are limited to the size of an RSA block
