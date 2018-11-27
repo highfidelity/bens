@@ -66,7 +66,7 @@ var environmentCmd = &cobra.Command{
 			}
 		}
 		if err != nil {
-			log.Fatalf("couldn't key: %v", err)
+			log.Fatalf("couldn't read key: %v", err)
 			return
 		}
 
