@@ -8,6 +8,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -57,7 +58,12 @@ var environmentCmd = &cobra.Command{
 			}
 			cipher, err = key.NewWithPass(pass, priKeyPath, pubKeyPath)
 		} else {
-			cipher, err = key.New(passPath, priKeyPath, pubKeyPath)
+			pass := os.Getenv("BENS_PASS")
+			if pass != "" {
+				cipher, err = key.NewWithPass([]byte(pass), priKeyPath, pubKeyPath)
+			} else {
+				cipher, err = key.New(passPath, priKeyPath, pubKeyPath)
+			}
 		}
 		if err != nil {
 			log.Fatalf("couldn't key: %v", err)
