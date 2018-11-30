@@ -147,3 +147,16 @@ func TestEncrypt(t *testing.T) {
 		t.Fatalf("Decrypted text (%s) didn't match origin plain text (%s)", decryptedPlainText, plainText)
 	}
 }
+
+func TestNewWithEmptyPassFile(t *testing.T) {
+	dir, _, priKeyPath, pubKeyPath, err := writeTestFiles()
+	if err != nil {
+		t.Fatalf("couldn't write test files: %v", err)
+	}
+	defer os.RemoveAll(dir)
+
+	_, err = New("", priKeyPath, pubKeyPath)
+	if err != nil {
+		t.Fatalf("new should handle empty pass by ignoring pass: %v", err)
+	}
+}
