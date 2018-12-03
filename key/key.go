@@ -104,14 +104,18 @@ type Key struct {
 }
 
 func NewWithPass(pass []byte, priKeyPath, pubKeyPath string) (Key, error) {
-	if err := mlock(pass); err != nil {
-		return Key{}, err
+	var privateKey *rsa.PrivateKey
+	if pass != nil {
+		if err := mlock(pass); err != nil {
+			return Key{}, err
+		}
+		var err error
+		privateKey, err = decryptPrivateKey(priKeyPath, pass)
+		if err != nil {
+			return Key{}, err
+		}
+		zero(pass)
 	}
-	privateKey, err := decryptPrivateKey(priKeyPath, pass)
-	if err != nil {
-		return Key{}, err
-	}
-	zero(pass)
 
 	block, err := decodePemFile(pubKeyPath)
 	if err != nil {
@@ -136,9 +140,13 @@ func NewWithPass(pass []byte, priKeyPath, pubKeyPath string) (Key, error) {
 }
 
 func New(passPath, priKeyPath, pubKeyPath string) (Key, error) {
-	pass, err := readPassFile(passPath)
-	if err != nil {
-		return Key{}, err
+	var pass []byte
+	if passPath != "" {
+		var err error
+		pass, err = readPassFile(passPath)
+		if err != nil {
+			return Key{}, err
+		}
 	}
 	return NewWithPass(pass, priKeyPath, pubKeyPath)
 }

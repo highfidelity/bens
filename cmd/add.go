@@ -37,6 +37,10 @@ var addCmd = &cobra.Command{
 		envName := args[0]
 		envValue := args[1]
 
+		// We don't use them so ignore them if specified.
+		passPath = ""
+		priKeyPath = ""
+
 		cipher, err := key.New(passPath, priKeyPath, pubKeyPath)
 		if err != nil {
 			log.Fatalf("couldn't load key: %v", err)
